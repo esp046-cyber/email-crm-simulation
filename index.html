@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email-to-CRM Automation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 1%;
+            color: #2d3748;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 12px 1%;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 1%;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            color: #667eea;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 11px;
+            color: #718096;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1%;
+            margin-bottom: 1%;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 12px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-value.good { color: #48bb78; }
+        .stat-value.primary { color: #667eea; }
+        .stat-value.warning { color: #ed8936; }
+
+        .stat-label {
+            font-size: 10px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .workflow-section {
+            background: white;
+            padding: 12px 1%;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 1%;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .workflow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 0;
+            overflow-x: auto;
+        }
+
+        .workflow-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            min-width: 80px;
+        }
+
+        .step-icon {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .step-icon.email { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .step-icon.ai { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .step-icon.crm { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+
+        .step-label {
+            font-size: 10px;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .workflow-arrow {
+            font-size: 20px;
+            color: #cbd5e0;
+            margin: 0 5px;
+        }
+
+        .leads-container {
+            background: white;
+            padding: 12px 1%;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 1%;
+        }
+
+        .lead-item {
+            background: #f7fafc;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid #667eea;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .lead-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .lead-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .lead-badge {
+            font-size: 9px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-hot { background: #fed7d7; color: #c53030; }
+        .badge-warm { background: #feebc8; color: #c05621; }
+        .badge-cold { background: #bee3f8; color: #2c5282; }
+
+        .lead-info {
+            font-size: 10px;
+            color: #718096;
+            margin-bottom: 4px;
+        }
+
+        .lead-score {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+        }
+
+        .score-bar {
+            flex: 1;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.5s ease;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1%;
+        }
+
+        .comparison-card {
+            background: white;
+            padding: 12px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .comparison-title {
+            font-size: 11px;
+            color: #718096;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .time-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .time-value.before { color: #e53e3e; }
+        .time-value.after { color: #48bb78; }
+
+        .time-label {
+            font-size: 10px;
+            color: #a0aec0;
+        }
+
+        .savings-badge {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .action-button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 1%;
+        }
+
+        .action-button:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+        }
+
+        .form-section {
+            background: white;
+            padding: 12px 1%;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 1%;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 4px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #2d3748;
+            background: #f7fafc;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .form-group select {
+            cursor: pointer;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .activity-log {
+            background: white;
+            padding: 12px 1%;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .log-item {
+            font-size: 10px;
+            padding: 6px 0;
+            border-bottom: 1px solid #f7fafc;
+            color: #4a5568;
+        }
+
+        .log-time {
+            color: #a0aec0;
+            margin-right: 6px;
+        }
+
+        .ai-analysis-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .ai-analysis-modal.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 16px 1%;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .close-modal {
+            background: #f7fafc;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .close-modal:active {
+            background: #e2e8f0;
+        }
+
+        .score-breakdown {
+            margin-bottom: 16px;
+        }
+
+        .overall-score {
+            text-align: center;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .overall-score-value {
+            font-size: 48px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .overall-score-label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.9);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .confidence-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .confidence-bar {
+            width: 100px;
+            height: 6px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: white;
+            transition: width 0.5s ease;
+        }
+
+        .confidence-text {
+            font-size: 11px;
+            color: white;
+            font-weight: 600;
+        }
+
+        .factor-item {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #cbd5e0;
+        }
+
+        .factor-item.positive {
+            border-left-color: #48bb78;
+            background: #f0fff4;
+        }
+
+        .factor-item.negative {
+            border-left-color: #f56565;
+            background: #fff5f5;
+        }
+
+        .factor-item.neutral {
+            border-left-color: #ed8936;
+            background: #fffaf0;
+        }
+
+        .factor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .factor-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .factor-score {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .factor-score.positive { color: #48bb78; }
+        .factor-score.negative { color: #f56565; }
+        .factor-score.neutral { color: #ed8936; }
+
+        .factor-reason {
+            font-size: 10px;
+            color: #718096;
+            line-height: 1.4;
+        }
+
+        .keyword-highlight {
+            background: #fef5e7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            color: #d69e2e;
+        }
+
+        .category-badge-large {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 8px;
+        }
+
+        .badge-large-hot {
+            background: linear-gradient(135deg, #fc8181, #f56565);
+            color: white;
+        }
+
+        .badge-large-warm {
+            background: linear-gradient(135deg, #f6ad55, #ed8936);
+            color: white;
+        }
+
+        .badge-large-cold {
+            background: linear-gradient(135deg, #63b3ed, #4299e1);
+            color: white;
+        }
+
+        .ai-insights {
+            background: #edf2f7;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 16px;
+        }
+
+        .insights-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #4a5568;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .insight-item {
+            font-size: 11px;
+            color: #2d3748;
+            padding: 6px 0;
+            display: flex;
+            gap: 6px;
+        }
+
+        .view-analysis-btn {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: transform 0.2s;
+        }
+
+        .view-analysis-btn:active {
+            transform: scale(0.95);
+        }
+
+        .tab-navigation {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+
+        .tab-button {
+            background: transparent;
+            border: none;
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #718096;
+            cursor: pointer;
+            border-radius: 6px 6px 0 0;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            background: #f7fafc;
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 3px 3px 0 0;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .crm-table-container {
+            overflow-x: auto;
+            margin-top: 12px;
+        }
+
+        .crm-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .crm-table thead {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .crm-table th {
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 10px;
+            white-space: nowrap;
+        }
+
+        .crm-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #f7fafc;
+            color: #2d3748;
+        }
+
+        .crm-table tbody tr {
+            transition: background 0.2s;
+        }
+
+        .crm-table tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        .crm-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 150px;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 11px;
+            background: #f7fafc;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 11px;
+            background: #f7fafc;
+            cursor: pointer;
+            color: #4a5568;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .export-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: transform 0.2s;
+        }
+
+        .export-btn:active {
+            transform: scale(0.95);
+        }
+
+        .table-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .sort-indicator {
+            display: inline-block;
+            margin-left: 4px;
+            font-size: 10px;
+            opacity: 0.6;
+        }
+
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sortable:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .action-icon {
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .action-icon:hover {
+            background: #e2e8f0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #a0aec0;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: 11px;
+        }
+
+        .stat-item {
+            background: #f7fafc;
+            padding: 8px 12px;
+            border-radius: 6px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .stat-item-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-item-label {
+            color: #718096;
+            font-size: 9px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📧 Email-to-CRM Automation</h1>
+            <p>AI-Powered Lead Capture & Categorization</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value primary" id="totalLeads">0</div>
+                <div class="stat-label">Total Leads</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value good">98.5%</div>
+                <div class="stat-label">Accuracy</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value warning" id="processingTime">0s</div>
+                <div class="stat-label">Avg Process</div>
+            </div>
+        </div>
+
+        <div class="workflow-section">
+            <div class="section-title">
+                <span>⚡</span> Automation Workflow
+            </div>
+            <div class="workflow-diagram">
+                <div class="workflow-step">
+                    <div class="step-icon email">📨</div>
+                    <div class="step-label">Email/Form</div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step">
+                    <div class="step-icon ai pulse">🤖</div>
+                    <div class="step-label">AI Analysis</div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step">
+                    <div class="step-icon crm">💼</div>
+                    <div class="step-label">CRM Entry</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-grid">
+            <div class="comparison-card">
+                <div class="comparison-title">⏱️ Before Automation</div>
+                <div class="time-value before">45m</div>
+                <div class="time-label">Per lead entry</div>
+            </div>
+            <div class="comparison-card">
+                <div class="comparison-title">⚡ After Automation</div>
+                <div class="time-value after">2.3s</div>
+                <div class="time-label">Per lead entry</div>
+                <div class="savings-badge">💰 98% Time Saved</div>
+            </div>
+        </div>
+
+        <div class="leads-container">
+            <div class="section-title">
+                <span>📊</span> Lead Management
+            </div>
+            
+            <div class="tab-navigation">
+                <button class="tab-button active" onclick="switchTab('cards')">
+                    📇 Card View
+                </button>
+                <button class="tab-button" onclick="switchTab('table')">
+                    📋 CRM Table
+                </button>
+            </div>
+
+            <!-- Card View Tab -->
+            <div id="cardsTab" class="tab-content active">
+                <div id="leadsContainer"></div>
+            </div>
+
+            <!-- Table View Tab -->
+            <div id="tableTab" class="tab-content">
+                <div class="table-controls">
+                    <input 
+                        type="text" 
+                        class="search-box" 
+                        id="searchBox"
+                        placeholder="🔍 Search by name, email, or company..."
+                        oninput="filterTable()"
+                    >
+                    <select class="filter-select" id="categoryFilter" onchange="filterTable()">
+                        <option value="all">All Categories</option>
+                        <option value="hot">🔥 Hot</option>
+                        <option value="warm">☀️ Warm</option>
+                        <option value="cold">❄️ Cold</option>
+                    </select>
+                    <select class="filter-select" id="sourceFilter" onchange="filterTable()">
+                        <option value="all">All Sources</option>
+                        <option value="Website Form">Website Form</option>
+                        <option value="Email Campaign">Email Campaign</option>
+                        <option value="Social Media">Social Media</option>
+                        <option value="Referral">Referral</option>
+                        <option value="Cold Outreach">Cold Outreach</option>
+                    </select>
+                    <button class="export-btn" onclick="exportToCSV()">
+                        📥 Export CSV
+                    </button>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <div class="stat-item-value" id="hotCount">0</div>
+                        <div class="stat-item-label">Hot Leads</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-item-value" id="warmCount">0</div>
+                        <div class="stat-item-label">Warm Leads</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-item-value" id="coldCount">0</div>
+                        <div class="stat-item-label">Cold Leads</div>
+                    </div>
+                </div>
+
+                <div class="crm-table-container">
+                    <table class="crm-table">
+                        <thead>
+                            <tr>
+                                <th class="sortable" onclick="sortTable('name')">
+                                    Name <span class="sort-indicator" id="sort-name"></span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('email')">
+                                    Email <span class="sort-indicator" id="sort-email"></span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('company')">
+                                    Company <span class="sort-indicator" id="sort-company"></span>
+                                </th>
+                                <th>Phone</th>
+                                <th class="sortable" onclick="sortTable('source')">
+                                    Source <span class="sort-indicator" id="sort-source"></span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('score')">
+                                    Score <span class="sort-indicator" id="sort-score">▼</span>
+                                </th>
+                                <th class="sortable" onclick="sortTable('category')">
+                                    Category <span class="sort-indicator" id="sort-category"></span>
+                                </th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="crmTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="section-title">
+                <span>📝</span> Lead Capture Form
+            </div>
+            <form id="leadForm" onsubmit="captureLead(event)">
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="formName" required placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Email Address *</label>
+                    <input type="email" id="formEmail" required placeholder="john@company.com">
+                </div>
+                <div class="form-group">
+                    <label>Company *</label>
+                    <input type="text" id="formCompany" required placeholder="Tech Corp Inc.">
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="formPhone" placeholder="+1 (555) 123-4567">
+                </div>
+                <div class="form-group">
+                    <label>Lead Source *</label>
+                    <select id="formSource" required>
+                        <option value="">Select source...</option>
+                        <option value="Website Form">Website Form</option>
+                        <option value="Email Campaign">Email Campaign</option>
+                        <option value="Social Media">Social Media</option>
+                        <option value="Referral">Referral</option>
+                        <option value="Cold Outreach">Cold Outreach</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Message/Inquiry</label>
+                    <textarea id="formMessage" rows="3" placeholder="Tell us about your needs..."></textarea>
+                </div>
+                <button type="submit" class="action-button">
+                    🚀 Submit Lead (Auto-Process with AI)
+                </button>
+            </form>
+        </div>
+
+        <button class="action-button" onclick="simulateLead()" style="margin-top: 1%; background: linear-gradient(135deg, #48bb78, #38a169);">
+            ✨ Or Simulate Random Lead
+        </button>
+
+        <div class="activity-log" style="margin-top: 1%;">
+            <div class="section-title">
+                <span>📝</span> Activity Log
+            </div>
+            <div id="activityLog"></div>
+        </div>
+    </div>
+
+    <!-- AI Analysis Modal -->
+    <div id="aiAnalysisModal" class="ai-analysis-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">🤖 AI Categorization Analysis</div>
+                <button class="close-modal" onclick="closeModal()">×</button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        // Sample lead data
+        const leadTemplates = [
+            { name: 'Sarah Chen', email: 'sarah.chen@techcorp.io', company: 'TechCorp', category: 'hot', score: 92 },
+            { name: 'Mike Johnson', email: 'mjohnson@startup.com', company: 'StartupHub', category: 'warm', score: 78 },
+            { name: 'Emma Williams', email: 'e.williams@enterprise.net', company: 'Enterprise Inc', category: 'hot', score: 88 },
+            { name: 'David Park', email: 'dpark@smallbiz.com', company: 'Small Biz', category: 'cold', score: 45 },
+            { name: 'Lisa Martinez', email: 'lisa.m@innovation.co', company: 'Innovation Co', category: 'warm', score: 71 },
+            { name: 'Tom Anderson', email: 't.anderson@global.com', company: 'Global Systems', category: 'hot', score: 95 },
+            { name: 'Rachel Kim', email: 'rkim@solutions.io', company: 'Solutions Plus', category: 'warm', score: 82 },
+            { name: 'James Brown', email: 'jbrown@consulting.net', company: 'Brown Consulting', category: 'cold', score: 52 }
+        ];
+
+        let leads = [];
+        let totalLeads = 0;
+        let currentSort = { field: 'score', direction: 'desc' };
+        let filteredLeads = [];
+
+        // AI scoring algorithm based on form inputs
+        function calculateAIScore(formData) {
+            let score = 50; // Base score
+            const factors = [];
+            
+            // Email domain scoring
+            const email = formData.email.toLowerCase();
+            if (email.includes('@gmail.') || email.includes('@yahoo.') || email.includes('@hotmail.')) {
+                score -= 10; // Personal email
+                factors.push({
+                    type: 'negative',
+                    icon: '📧',
+                    name: 'Personal Email Domain',
+                    score: -10,
+                    reason: `Detected personal email (${email.split('@')[1]}). Business emails indicate higher intent.`
+                });
+            } else {
+                score += 15; // Business email
+                factors.push({
+                    type: 'positive',
+                    icon: '🏢',
+                    name: 'Business Email Domain',
+                    score: +15,
+                    reason: `Professional email domain (${email.split('@')[1]}) suggests legitimate business inquiry.`
+                });
+            }
+            
+            // Company name scoring
+            if (formData.company.length > 5) {
+                score += 10;
+                factors.push({
+                    type: 'positive',
+                    icon: '🏭',
+                    name: 'Company Information',
+                    score: +10,
+                    reason: `Provided detailed company name: "${formData.company}"`
+                });
+            }
+            
+            // Phone provided
+            if (formData.phone && formData.phone.length > 5) {
+                score += 8;
+                factors.push({
+                    type: 'positive',
+                    icon: '📱',
+                    name: 'Contact Phone Provided',
+                    score: +8,
+                    reason: 'Phone number indicates willingness for direct communication.'
+                });
+            } else {
+                factors.push({
+                    type: 'neutral',
+                    icon: '📱',
+                    name: 'No Phone Number',
+                    score: 0,
+                    reason: 'Optional field not provided.'
+                });
+            }
+            
+            // Message quality
+            const detectedKeywords = [];
+            if (formData.message) {
+                const msgLength = formData.message.length;
+                if (msgLength > 50) {
+                    score += 12;
+                    factors.push({
+                        type: 'positive',
+                        icon: '💬',
+                        name: 'Detailed Message',
+                        score: +12,
+                        reason: `Comprehensive inquiry (${msgLength} characters) shows serious interest.`
+                    });
+                }
+                
+                // High-intent keywords
+                const highIntentWords = ['budget', 'purchase', 'buy', 'pricing', 'quote', 'enterprise', 'demo', 'asap', 'urgent'];
+                const lowerMsg = formData.message.toLowerCase();
+                highIntentWords.forEach(word => {
+                    if (lowerMsg.includes(word)) {
+                        score += 5;
+                        detectedKeywords.push(word);
+                    }
+                });
+                
+                if (detectedKeywords.length > 0) {
+                    factors.push({
+                        type: 'positive',
+                        icon: '🎯',
+                        name: 'High-Intent Keywords',
+                        score: +5 * detectedKeywords.length,
+                        reason: `Detected ${detectedKeywords.length} high-intent keyword(s): ${detectedKeywords.map(k => `"${k}"`).join(', ')}`,
+                        keywords: detectedKeywords
+                    });
+                }
+            } else {
+                factors.push({
+                    type: 'negative',
+                    icon: '💬',
+                    name: 'No Message Provided',
+                    score: -5,
+                    reason: 'Missing inquiry details reduces lead quality assessment.'
+                });
+                score -= 5;
+            }
+            
+            // Lead source value
+            const sourceScores = {
+                'Referral': 15,
+                'Website Form': 10,
+                'Email Campaign': 8,
+                'Social Media': 5,
+                'Cold Outreach': 3
+            };
+            const sourceScore = sourceScores[formData.source] || 0;
+            score += sourceScore;
+            
+            const sourceTypes = {
+                'Referral': 'positive',
+                'Website Form': 'positive',
+                'Email Campaign': 'neutral',
+                'Social Media': 'neutral',
+                'Cold Outreach': 'neutral'
+            };
+            
+            factors.push({
+                type: sourceTypes[formData.source] || 'neutral',
+                icon: '📍',
+                name: 'Lead Source',
+                score: sourceScore,
+                reason: `Origin: ${formData.source}. Referrals and direct website forms typically convert better.`
+            });
+            
+            // Cap score at 100
+            const finalScore = Math.min(100, Math.max(0, score));
+            const confidence = Math.min(95, 60 + (factors.length * 5));
+            
+            return { score: finalScore, factors, confidence, keywords: detectedKeywords };
+        }
+
+        function categorizeScore(score) {
+            if (score >= 85) return 'hot';
+            if (score >= 60) return 'warm';
+            return 'cold';
+        }
+
+        function showAIAnalysis(leadId) {
+            const lead = leads.find(l => l.id === leadId);
+            if (!lead) return;
+            
+            const analysis = lead.analysis || calculateAIScore(lead);
+            const category = lead.category;
+            
+            const categoryInfo = {
+                hot: { label: 'Hot Lead', description: 'High conversion probability - Prioritize immediate follow-up' },
+                warm: { label: 'Warm Lead', description: 'Moderate interest - Schedule follow-up within 24-48 hours' },
+                cold: { label: 'Cold Lead', description: 'Low urgency - Add to nurture campaign' }
+            };
+            
+            const insights = generateInsights(lead, analysis);
+            
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div class="overall-score">
+                    <div class="overall-score-value">${analysis.score}</div>
+                    <div class="overall-score-label">AI Lead Score</div>
+                    <div class="confidence-indicator">
+                        <span class="confidence-text">${analysis.confidence}% Confidence</span>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: ${analysis.confidence}%"></div>
+                        </div>
+                    </div>
+                    <div class="category-badge-large badge-large-${category}">
+                        ${categoryInfo[category].label}
+                    </div>
+                </div>
+
+                <div style="font-size: 11px; color: #4a5568; text-align: center; margin-bottom: 16px; line-height: 1.5;">
+                    ${categoryInfo[category].description}
+                </div>
+
+                <div class="score-breakdown">
+                    <div style="font-size: 12px; font-weight: 700; color: #2d3748; margin-bottom: 12px;">
+                        📊 Score Breakdown
+                    </div>
+                    ${analysis.factors.map(factor => `
+                        <div class="factor-item ${factor.type}">
+                            <div class="factor-header">
+                                <div class="factor-name">
+                                    <span>${factor.icon}</span>
+                                    ${factor.name}
+                                </div>
+                                <div class="factor-score ${factor.type}">
+                                    ${factor.score > 0 ? '+' : ''}${factor.score}
+                                </div>
+                            </div>
+                            <div class="factor-reason">
+                                ${factor.keywords ? 
+                                    factor.reason.replace(/\"([^"]+)\"/g, '<span class="keyword-highlight">$1</span>') : 
+                                    factor.reason
+                                }
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="ai-insights">
+                    <div class="insights-title">💡 AI Recommendations</div>
+                    ${insights.map(insight => `
+                        <div class="insight-item">
+                            <span>${insight.icon}</span>
+                            <span>${insight.text}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            document.getElementById('aiAnalysisModal').classList.add('active');
+        }
+
+        function generateInsights(lead, analysis) {
+            const insights = [];
+            const category = lead.category;
+            
+            if (category === 'hot') {
+                insights.push({ icon: '⚡', text: 'Immediate action required - Contact within 1 hour' });
+                insights.push({ icon: '👤', text: 'Assign to senior sales representative' });
+            } else if (category === 'warm') {
+                insights.push({ icon: '📅', text: 'Schedule follow-up call within 24-48 hours' });
+                insights.push({ icon: '📧', text: 'Send personalized email with relevant case studies' });
+            } else {
+                insights.push({ icon: '🔄', text: 'Add to automated nurture email sequence' });
+                insights.push({ icon: '📊', text: 'Monitor engagement before manual outreach' });
+            }
+            
+            if (analysis.keywords && analysis.keywords.length > 0) {
+                insights.push({ icon: '🎯', text: `Mention ${analysis.keywords[0]} in initial outreach` });
+            }
+            
+            if (lead.source === 'Referral') {
+                insights.push({ icon: '🤝', text: 'Reference the referral source in communication' });
+            }
+            
+            return insights;
+        }
+
+        function closeModal() {
+            document.getElementById('aiAnalysisModal').classList.remove('active');
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('aiAnalysisModal');
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        function captureLead(event) {
+            event.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('formName').value,
+                email: document.getElementById('formEmail').value,
+                company: document.getElementById('formCompany').value,
+                phone: document.getElementById('formPhone').value,
+                source: document.getElementById('formSource').value,
+                message: document.getElementById('formMessage').value,
+                id: Date.now()
+            };
+            
+            addLog(`📨 Form submitted: ${formData.email}`);
+            
+            setTimeout(() => {
+                addLog(`🤖 AI analyzing lead data...`);
+            }, 500);
+            
+            setTimeout(() => {
+                const analysis = calculateAIScore(formData);
+                const category = categorizeScore(analysis.score);
+                
+                const lead = {
+                    ...formData,
+                    score: analysis.score,
+                    category: category,
+                    analysis: analysis
+                };
+                
+                addLog(`✅ Lead scored: ${analysis.score}/100 (${category.toUpperCase()})`);
+                addLog(`📊 Analysis: ${getScoreReasoning(analysis)}`);
+                
+                leads.unshift(lead);
+                totalLeads++;
+                updateUI();
+            }, 1500);
+            
+            setTimeout(() => {
+                addLog(`💼 Added to CRM: ${formData.company}`);
+                addLog(`📧 Notification sent to sales team`);
+                
+                // Reset form
+                document.getElementById('leadForm').reset();
+            }, 2500);
+        }
+
+        function getScoreReasoning(analysis) {
+            const positiveFactors = analysis.factors.filter(f => f.type === 'positive');
+            if (positiveFactors.length === 0) return 'Standard lead profile';
+            return positiveFactors.slice(0, 2).map(f => f.name).join(', ');
+        }
+
+        function addLog(message) {
+            const logContainer = document.getElementById('activityLog');
+            const logItem = document.createElement('div');
+            logItem.className = 'log-item';
+            const time = new Date().toLocaleTimeString();
+            logItem.innerHTML = `<span class="log-time">${time}</span>${message}`;
+            logContainer.insertBefore(logItem, logContainer.firstChild);
+            
+            // Keep only last 10 logs
+            while (logContainer.children.length > 10) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+
+        function simulateLead() {
+            const template = leadTemplates[Math.floor(Math.random() * leadTemplates.length)];
+            const lead = { 
+                ...template, 
+                id: Date.now(),
+                phone: '+1 (555) ' + Math.floor(Math.random() * 900 + 100) + '-' + Math.floor(Math.random() * 9000 + 1000),
+                source: ['Website Form', 'Email Campaign', 'Referral', 'Social Media'][Math.floor(Math.random() * 4)],
+                message: 'Interested in learning more about your services and pricing options.'
+            };
+            
+            addLog(`📨 Email received from ${lead.email}`);
+            
+            setTimeout(() => {
+                addLog(`🤖 AI analyzing lead: ${lead.name}...`);
+            }, 500);
+            
+            setTimeout(() => {
+                const analysis = calculateAIScore(lead);
+                lead.score = analysis.score;
+                lead.category = categorizeScore(analysis.score);
+                lead.analysis = analysis;
+                
+                addLog(`✅ Lead categorized as ${lead.category.toUpperCase()} (Score: ${lead.score})`);
+                leads.unshift(lead);
+                totalLeads++;
+                updateUI();
+            }, 1500);
+            
+            setTimeout(() => {
+                addLog(`💼 Added to CRM: ${lead.company}`);
+            }, 2000);
+        }
+
+        function updateUI() {
+            // Update card view
+            const container = document.getElementById('leadsContainer');
+            container.innerHTML = '';
+            
+            const displayLeads = leads.slice(0, 5);
+            
+            if (displayLeads.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <div>No leads yet. Submit the form or simulate a lead to get started!</div>
+                    </div>
+                `;
+            } else {
+                displayLeads.forEach(lead => {
+                    const leadItem = document.createElement('div');
+                    leadItem.className = 'lead-item';
+                    leadItem.innerHTML = `
+                        <div class="lead-header">
+                            <div class="lead-name">${lead.name}</div>
+                            <div class="lead-badge badge-${lead.category}">${lead.category}</div>
+                        </div>
+                        <div class="lead-info">📧 ${lead.email}</div>
+                        <div class="lead-info">🏢 ${lead.company}</div>
+                        <div class="lead-score">
+                            <span>AI Score:</span>
+                            <div class="score-bar">
+                                <div class="score-fill" style="width: ${lead.score}%"></div>
+                            </div>
+                            <span>${lead.score}</span>
+                        </div>
+                        <button class="view-analysis-btn" onclick="showAIAnalysis(${lead.id})">
+                            🔍 View AI Analysis
+                        </button>
+                    `;
+                    container.appendChild(leadItem);
+                });
+            }
+            
+            // Update CRM table
+            updateCRMTable();
+            
+            // Update stats
+            document.getElementById('totalLeads').textContent = totalLeads;
+            document.getElementById('processingTime').textContent = '2.3s';
+            
+            // Update category counts
+            const hotLeads = leads.filter(l => l.category === 'hot').length;
+            const warmLeads = leads.filter(l => l.category === 'warm').length;
+            const coldLeads = leads.filter(l => l.category === 'cold').length;
+            
+            document.getElementById('hotCount').textContent = hotLeads;
+            document.getElementById('warmCount').textContent = warmLeads;
+            document.getElementById('coldCount').textContent = coldLeads;
+        }
+
+        function updateCRMTable() {
+            const tbody = document.getElementById('crmTableBody');
+            filteredLeads = getFilteredLeads();
+            
+            if (filteredLeads.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #a0aec0;">
+                            <div style="font-size: 36px; margin-bottom: 8px;">🔍</div>
+                            <div>No leads match your filters</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = filteredLeads.map(lead => `
+                <tr>
+                    <td><strong>${lead.name}</strong></td>
+                    <td>${lead.email}</td>
+                    <td>${lead.company}</td>
+                    <td>${lead.phone || '—'}</td>
+                    <td>${lead.source || '—'}</td>
+                    <td><strong>${lead.score}</strong></td>
+                    <td>
+                        <span class="table-badge badge-${lead.category}">
+                            ${lead.category}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            <span class="action-icon" onclick="showAIAnalysis(${lead.id})" title="View Analysis">
+                                🔍
+                            </span>
+                            <span class="action-icon" onclick="deleteLead(${lead.id})" title="Delete">
+                                🗑️
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            if (tab === 'cards') {
+                document.getElementById('cardsTab').classList.add('active');
+            } else {
+                document.getElementById('tableTab').classList.add('active');
+                updateCRMTable();
+            }
+        }
+
+        function getFilteredLeads() {
+            let filtered = [...leads];
+            
+            // Search filter
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            if (searchTerm) {
+                filtered = filtered.filter(lead => 
+                    lead.name.toLowerCase().includes(searchTerm) ||
+                    lead.email.toLowerCase().includes(searchTerm) ||
+                    lead.company.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // Category filter
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            if (categoryFilter !== 'all') {
+                filtered = filtered.filter(lead => lead.category === categoryFilter);
+            }
+            
+            // Source filter
+            const sourceFilter = document.getElementById('sourceFilter').value;
+            if (sourceFilter !== 'all') {
+                filtered = filtered.filter(lead => lead.source === sourceFilter);
+            }
+            
+            // Apply sorting
+            filtered.sort((a, b) => {
+                let aVal = a[currentSort.field];
+                let bVal = b[currentSort.field];
+                
+                if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+                
+                if (currentSort.direction === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+            
+            return filtered;
+        }
+
+        function filterTable() {
+            updateCRMTable();
+        }
+
+        function sortTable(field) {
+            // Toggle direction if same field, otherwise default to desc
+            if (currentSort.field === field) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.field = field;
+                currentSort.direction = field === 'score' ? 'desc' : 'asc';
+            }
+            
+            // Update sort indicators
+            document.querySelectorAll('.sort-indicator').forEach(el => {
+                el.textContent = '';
+            });
+            
+            const indicator = document.getElementById(`sort-${field}`);
+            indicator.textContent = currentSort.direction === 'asc' ? '▲' : '▼';
+            
+            updateCRMTable();
+        }
+
+        function exportToCSV() {
+            const leadsToExport = filteredLeads.length > 0 ? filteredLeads : leads;
+            
+            if (leadsToExport.length === 0) {
+                alert('No leads to export!');
+                return;
+            }
+            
+            const headers = ['Name', 'Email', 'Company', 'Phone', 'Source', 'Score', 'Category', 'Message'];
+            const csvContent = [
+                headers.join(','),
+                ...leadsToExport.map(lead => [
+                    `"${lead.name}"`,
+                    `"${lead.email}"`,
+                    `"${lead.company}"`,
+                    `"${lead.phone || ''}"`,
+                    `"${lead.source || ''}"`,
+                    lead.score,
+                    lead.category,
+                    `"${(lead.message || '').replace(/"/g, '""')}"`
+                ].join(','))
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `crm-leads-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            addLog(`📥 Exported ${leadsToExport.length} leads to CSV`);
+        }
+
+        function deleteLead(leadId) {
+            if (confirm('Are you sure you want to delete this lead?')) {
+                leads = leads.filter(l => l.id !== leadId);
+                totalLeads = leads.length;
+                updateUI();
+                addLog(`🗑️ Lead deleted from CRM`);
+            }
+        }
+
+        // Initialize with sample data
+        function init() {
+            addLog('⚡ Email-to-CRM automation system online');
+            addLog('🔗 Connected to Zapier workflow');
+            addLog('✅ Ready to process incoming leads');
+            
+            // Add initial leads
+            setTimeout(() => simulateLead(), 1000);
+            setTimeout(() => simulateLead(), 3000);
+            setTimeout(() => simulateLead(), 5000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
